@@ -47,3 +47,4 @@ out/
 # Gradle Wrapper
 !gradle-wrapper.jar
 !gradle-wrapper.properties
+myRes

@@ -61,9 +61,11 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.11.1")
     
     // Kotest属性测试
-    testImplementation("io.kotest:kotest-runner-junit5:5.8.0")
     testImplementation("io.kotest:kotest-assertions-core:5.8.0")
     testImplementation("io.kotest:kotest-property:5.8.0")
+    
+    // Kotlin协程（用于属性测试）
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     
     // Android测试依赖
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
