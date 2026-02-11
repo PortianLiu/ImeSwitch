@@ -15,8 +15,8 @@
         <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <!-- 透明主题（用于快速切换模式） -->
-    <style name="Theme.ImeSwitch.Transparent" parent="Theme.AppCompat.Light.NoActionBar">
+    <!-- 透明主题（用于快速切换模式和输入法选择对话框） -->
+    <style name="Theme.Transparent" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowContentOverlay">@null</item>

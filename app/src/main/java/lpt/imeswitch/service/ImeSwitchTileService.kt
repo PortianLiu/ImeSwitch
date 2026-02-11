@@ -1,8 +1,11 @@
 package lpt.imeswitch.service
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
+import lpt.imeswitch.ui.ImeSelectionActivity
 import lpt.imeswitch.utils.ImeManager
 import lpt.imeswitch.utils.PermissionChecker
 
@@ -10,6 +13,8 @@ import lpt.imeswitch.utils.PermissionChecker
  * 快速设置服务
  * 
  * 提供快速设置面板中的输入法切换快捷开关功能
+ * - 短按: 轮切到下一个输入法
+ * - 长按: 打开输入法选择Activity
  */
 class ImeSwitchTileService : TileService() {
     
@@ -66,7 +71,7 @@ class ImeSwitchTileService : TileService() {
     /**
      * 用户点击快捷开关时调用
      * 
-     * 执行输入法切换操作并更新快捷开关状态
+     * 短按: 执行输入法轮切
      */
     override fun onClick() {
         super.onClick()
@@ -87,11 +92,10 @@ class ImeSwitchTileService : TileService() {
             return
         }
         
-        // 执行切换
+        // 短按: 执行轮切
         val success = imeManager.switchToNextInputMethod()
         if (success) {
             Log.i(TAG, "输入法切换成功")
-            // 显示切换成功的Toast提示（注意：在后台服务中会被系统屏蔽）
             val currentImeName = imeManager.getCurrentInputMethodName()
             showToast("已切换到: $currentImeName")
         } else {

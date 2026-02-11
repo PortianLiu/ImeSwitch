@@ -187,6 +187,33 @@ class ImeManager(private val context: Context) {
     }
     
     /**
+     * 切换到指定的输入法
+     * 
+     * @param imeId 目标输入法的ID
+     * @return true表示切换成功，false表示切换失败
+     */
+    fun switchToInputMethod(imeId: String): Boolean {
+        return try {
+            // 执行切换
+            Settings.Secure.putString(
+                context.contentResolver,
+                Settings.Secure.DEFAULT_INPUT_METHOD,
+                imeId
+            )
+            
+            val imeName = getInputMethodName(imeId)
+            Log.i(TAG, "成功切换到: $imeName ($imeId)")
+            true
+        } catch (e: SecurityException) {
+            Log.e(TAG, "权限不足，无法切换输入法", e)
+            false
+        } catch (e: Exception) {
+            Log.e(TAG, "切换输入法失败", e)
+            false
+        }
+    }
+    
+    /**
      * 切换到下一个输入法
      * 
      * 在已启用的输入法列表中循环切换。
