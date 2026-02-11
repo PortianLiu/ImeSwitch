@@ -1,14 +1,8 @@
 package lpt.imeswitch.service
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import lpt.imeswitch.R
 import lpt.imeswitch.utils.ImeManager
 import lpt.imeswitch.utils.PermissionChecker
 
@@ -21,8 +15,6 @@ class ImeSwitchTileService : TileService() {
     
     companion object {
         private const val TAG = "ImeSwitchTile"
-        private const val CHANNEL_ID = "ime_switch_channel"
-        private const val NOTIFICATION_ID = 1001
     }
     
     private lateinit var imeManager: ImeManager
@@ -36,7 +28,6 @@ class ImeSwitchTileService : TileService() {
         super.onTileAdded()
         Log.d(TAG, "快捷开关已添加")
         imeManager = ImeManager(applicationContext)
-        createNotificationChannel()
         updateTileState()
     }
     
@@ -59,7 +50,6 @@ class ImeSwitchTileService : TileService() {
         super.onStartListening()
         Log.d(TAG, "快捷开关开始监听")
         imeManager = ImeManager(applicationContext)
-        createNotificationChannel()
         updateTileState()
     }
     
@@ -101,12 +91,9 @@ class ImeSwitchTileService : TileService() {
         val success = imeManager.switchToNextInputMethod()
         if (success) {
             Log.i(TAG, "输入法切换成功")
-            // 显示切换成功的通知
+            // 显示切换成功的Toast提示（注意：在后台服务中会被系统屏蔽）
             val currentImeName = imeManager.getCurrentInputMethodName()
-            showNotification("已切换到: $currentImeName")
-            
-            // 同时临时更新快捷开关标签显示切换结果
-            showSwitchResult(currentImeName)
+            showToast("已切换到: $currentImeName")
         } else {
             Log.e(TAG, "输入法切换失败")
         }
@@ -116,65 +103,13 @@ class ImeSwitchTileService : TileService() {
     }
     
     /**
-     * 在快捷开关上临时显示切换结果
+     * 显示Toast提示
+     * 
+     * 注意：在后台服务（TileService）中显示的Toast会被Android系统屏蔽
      */
-    private fun showSwitchResult(imeName: String) {
-        val tile = qsTile ?: return
-        
-        // 临时显示切换结果
-        tile.label = "→ $imeName"
-        tile.updateTile()
-        
-        // 1.5秒后恢复正常显示
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-            updateTileState()
-        }, 1500)
-    }
-    
-    /**
-     * 创建通知渠道（Android 8.0+需要）
-     */
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "输入法切换通知"
-            val descriptionText = "显示输入法切换结果"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT // 改为DEFAULT重要性
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-                setShowBadge(false)
-                enableVibration(false) // 禁用振动
-                setSound(null, null) // 禁用声音
-            }
-            
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-            
-            Log.d(TAG, "通知渠道已创建")
-        }
-    }
-    
-    /**
-     * 显示通知
-     */
-    private fun showNotification(message: String) {
-        try {
-            Log.d(TAG, "准备显示通知: $message")
-            
-            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_menu_preferences)
-                .setContentTitle("输入法切换")
-                .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT) // 改为DEFAULT优先级
-                .setAutoCancel(true)
-                .setTimeoutAfter(3000) // 3秒后自动消失
-                .build()
-            
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.notify(NOTIFICATION_ID, notification)
-            
-            Log.d(TAG, "通知已发送")
-        } catch (e: Exception) {
-            Log.e(TAG, "显示通知失败", e)
+    private fun showToast(message: String) {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            android.widget.Toast.makeText(applicationContext, message, android.widget.Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -206,13 +141,9 @@ class ImeSwitchTileService : TileService() {
             val imeIds = imeManager.getEnabledInputMethodIds()
             
             if (imeIds.size < 2) {
-                // 输入法数量不足
+                // 输入法数量不足，显示功能名称
                 tile.state = Tile.STATE_INACTIVE
-                tile.label = when (imeIds.size) {
-                    0 -> "无输入法"
-                    1 -> "请启用更多输入法"
-                    else -> "输入法不足"
-                }
+                tile.label = "输入法切换"
                 tile.updateTile()
                 Log.d(TAG, "快捷开关状态更新: 输入法数量不足")
                 return
