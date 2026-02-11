@@ -15,7 +15,16 @@
         android:theme="@style/Theme.ImeSwitch"
         tools:targetApi="31">
 
-        <!-- 主Activity将在后续任务中配置 -->
+        <!-- 主Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         
         <!-- 快速设置瓦片服务 -->
         <service

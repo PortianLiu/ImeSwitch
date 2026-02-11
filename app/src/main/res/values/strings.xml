@@ -2,4 +2,37 @@
 <resources>
     <string name="app_name">ImeSwitch</string>
     <string name="tile_label">输入法切换</string>
+    
+    <!-- 使用说明 -->
+    <string name="usage_title">使用说明</string>
+    <string name="usage_description">本应用提供两种输入法切换方式：\n\n1. 通过快速设置面板（控制中心）的瓦片切换\n   - 下拉通知栏，进入快速设置面板\n   - 点击编辑按钮，添加"输入法切换"瓦片\n   - 点击瓦片即可切换输入法\n\n2. 通过点击应用图标直接切换（权限授予后）\n   - 完成权限授予后\n   - 直接点击应用图标即可切换\n   - 无需打开应用界面</string>
+    
+    <!-- 权限授予 -->
+    <string name="permission_title">权限授予</string>
+    <string name="tab_adb">ADB授权</string>
+    <string name="tab_root">Root授权</string>
+    
+    <!-- ADB授权 -->
+    <string name="adb_steps">步骤：\n\n1. 在手机设置中启用"开发者选项"和"USB调试"\n2. 使用USB线连接手机到电脑\n3. 在电脑上执行以下命令：</string>
+    <string name="copy_command">复制命令</string>
+    <string name="command_copied">命令已复制到剪贴板</string>
+    
+    <!-- Root授权 -->
+    <string name="grant_via_root">一键授权</string>
+    <string name="root_available">检测到Root权限</string>
+    <string name="root_not_available">未检测到Root权限</string>
+    <string name="root_grant_success">Root授权成功</string>
+    <string name="root_grant_failed">Root授权失败</string>
+    
+    <!-- 权限状态 -->
+    <string name="permission_status_title">权限状态</string>
+    <string name="permission_granted">✓ 权限已授予</string>
+    <string name="permission_not_granted">✗ 权限未授予</string>
+    <string name="check_permission">检测权限</string>
+    <string name="complete_setup">我已完成授权</string>
+    
+    <!-- Toast提示 -->
+    <string name="switched_to">已切换到: %s</string>
+    <string name="switch_failed">切换失败，请检查权限</string>
+    <string name="insufficient_imes">输入法数量不足，请启用更多输入法</string>
 </resources>
