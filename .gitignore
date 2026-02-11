@@ -1,0 +1,49 @@
+# Gradle文件
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# 本地配置文件
+local.properties
+
+# Kiro IDE配置
+.kiro/
+
+# Android Studio
+.idea/
+*.iml
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
+
+# Kotlin
+*.kotlin_module
+
+# 签名文件
+*.jks
+*.keystore
+
+# 日志文件
+*.log
+
+# 测试结果
+/test-results/
+/androidTest-results/
+
+# Lint
+lint-report.html
+lint-report.xml
+
+# 其他
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+
+# Gradle Wrapper
+!gradle-wrapper.jar
+!gradle-wrapper.properties
