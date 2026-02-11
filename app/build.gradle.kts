@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "lpt.imeswitch"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "lpt.imeswitch"
         minSdk = 24  // Android 7.0 - TileService引入版本
-        targetSdk = 34  // Android 14
+        targetSdk = 36  // Android 16
         versionCode = 1
         versionName = "1.0"
 
@@ -43,17 +43,17 @@ android {
 
 dependencies {
     // Kotlin标准库
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.20")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.0.21")
 
     // AndroidX核心库
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
     
     // Material Design组件
-    implementation("com.google.android.material:material:1.11.0")
+    implementation("com.google.android.material:material:1.12.0")
     
     // ConstraintLayout
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+    implementation("androidx.constraintlayout:constraintlayout:2.2.0")
 
     // 测试依赖
     testImplementation("junit:junit:4.13.2")
