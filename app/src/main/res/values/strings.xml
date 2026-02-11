@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ImeSwitch</string>
+    <string name="tile_label">输入法切换</string>
 </resources>

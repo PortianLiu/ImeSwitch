@@ -17,7 +17,17 @@
 
         <!-- 主Activity将在后续任务中配置 -->
         
-        <!-- TileService将在后续任务中配置 -->
+        <!-- 快速设置瓦片服务 -->
+        <service
+            android:name=".service.ImeSwitchTileService"
+            android:icon="@android:drawable/ic_menu_preferences"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
 
     </application>
 
