@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "lpt.imeswitch"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "lpt.imeswitch"
         minSdk = 24  // Android 7.0 - TileService引入版本
-        targetSdk = 36  // Android 16
+        targetSdk = 34  // Android 14
         versionCode = 1
         versionName = "1.0"
 
@@ -34,6 +34,12 @@ android {
 
     kotlinOptions {
         jvmTarget = "11"
+    }
+    
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 
     buildFeatures {
