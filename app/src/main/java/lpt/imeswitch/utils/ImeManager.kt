@@ -18,7 +18,49 @@ class ImeManager(private val context: Context) {
     }
     
     /**
+     * 获取已启用的输入法ID列表
+     * 
+     * 直接从Settings.Secure.ENABLED_INPUT_METHODS获取，不依赖InputMethodManager，
+     * 避免在MIUI等定制系统上获取不完整的列表。
+     * 
+     * @return 已启用的输入法ID列表
+     */
+    fun getEnabledInputMethodIds(): List<String> {
+        return try {
+            // 从Settings.Secure获取已启用的输入法ID列表
+            val enabledImeIds = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_INPUT_METHODS
+            )
+            
+            if (enabledImeIds.isNullOrEmpty()) {
+                Log.w(TAG, "ENABLED_INPUT_METHODS为空")
+                return emptyList()
+            }
+            
+            Log.d(TAG, "ENABLED_INPUT_METHODS: $enabledImeIds")
+            
+            // 解析输入法ID列表（格式：id1:id2:id3）
+            val imeIds = enabledImeIds.split(":").filter { it.isNotEmpty() }
+            
+            Log.d(TAG, "获取到${imeIds.size}个已启用的输入法ID")
+            imeIds.forEachIndexed { index, id ->
+                Log.d(TAG, "  [$index] $id")
+            }
+            
+            imeIds
+        } catch (e: Exception) {
+            Log.e(TAG, "获取已启用输入法ID列表失败", e)
+            emptyList()
+        }
+    }
+    
+    /**
      * 获取已启用的输入法列表
+     * 
+     * 使用Settings.Secure.ENABLED_INPUT_METHODS来获取完整的已启用输入法列表，
+     * 这比InputMethodManager.enabledInputMethodList更可靠，
+     * 特别是在某些定制系统（如MIUI）上。
      * 
      * @return 已启用的输入法信息列表，如果获取失败则返回空列表
      */
@@ -30,8 +72,40 @@ class ImeManager(private val context: Context) {
                 return emptyList()
             }
             
-            val imeList = imm.enabledInputMethodList
+            // 从Settings.Secure获取已启用的输入法ID列表
+            val enabledImeIds = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_INPUT_METHODS
+            )
+            
+            if (enabledImeIds.isNullOrEmpty()) {
+                Log.w(TAG, "ENABLED_INPUT_METHODS为空")
+                return emptyList()
+            }
+            
+            Log.d(TAG, "ENABLED_INPUT_METHODS: $enabledImeIds")
+            
+            // 解析输入法ID列表（格式：id1:id2:id3）
+            val enabledIds = enabledImeIds.split(":").toSet()
+            
+            // 获取所有已安装的输入法
+            val allInputMethods = imm.inputMethodList
+            
+            Log.d(TAG, "inputMethodList返回了${allInputMethods.size}个输入法")
+            
+            // 过滤出已启用的输入法
+            val imeList = allInputMethods.filter { imeInfo ->
+                enabledIds.contains(imeInfo.id)
+            }
+            
             Log.d(TAG, "获取到${imeList.size}个已启用的输入法")
+            
+            // 打印每个输入法的详细信息
+            imeList.forEachIndexed { index, imeInfo ->
+                val name = imeInfo.loadLabel(context.packageManager).toString()
+                Log.d(TAG, "  [$index] ${imeInfo.id} - $name")
+            }
+            
             imeList
         } catch (e: Exception) {
             Log.e(TAG, "获取已启用输入法列表失败", e)
@@ -122,16 +196,16 @@ class ImeManager(private val context: Context) {
      */
     fun switchToNextInputMethod(): Boolean {
         return try {
-            // 获取已启用的输入法列表
-            val imeList = getEnabledInputMethods()
+            // 获取已启用的输入法ID列表
+            val imeIds = getEnabledInputMethodIds()
             
             // 检查输入法数量
-            if (imeList.isEmpty()) {
+            if (imeIds.isEmpty()) {
                 Log.w(TAG, "没有已启用的输入法")
                 return false
             }
             
-            if (imeList.size == 1) {
+            if (imeIds.size == 1) {
                 Log.w(TAG, "只有一个输入法，无法切换")
                 return false
             }
@@ -144,7 +218,7 @@ class ImeManager(private val context: Context) {
             }
             
             // 计算下一个输入法ID
-            val nextImeId = getNextInputMethodId(currentImeId, imeList)
+            val nextImeId = getNextInputMethodId(currentImeId, imeIds)
             if (nextImeId == null) {
                 Log.e(TAG, "无法计算下一个输入法ID")
                 return false
@@ -172,36 +246,36 @@ class ImeManager(private val context: Context) {
     /**
      * 计算下一个输入法ID（私有方法）
      * 
-     * 在输入法列表中找到当前输入法的位置，然后返回下一个输入法的ID。
+     * 在输入法ID列表中找到当前输入法的位置，然后返回下一个输入法的ID。
      * 如果当前输入法是最后一个，则返回第一个（循环）。
      * 
      * @param currentId 当前输入法ID
-     * @param imeList 已启用的输入法列表
+     * @param imeIds 已启用的输入法ID列表
      * @return 下一个输入法的ID，如果计算失败则返回null
      */
-    private fun getNextInputMethodId(currentId: String, imeList: List<InputMethodInfo>): String? {
-        if (imeList.isEmpty()) {
-            Log.w(TAG, "输入法列表为空")
+    private fun getNextInputMethodId(currentId: String, imeIds: List<String>): String? {
+        if (imeIds.isEmpty()) {
+            Log.w(TAG, "输入法ID列表为空")
             return null
         }
         
-        if (imeList.size == 1) {
+        if (imeIds.size == 1) {
             Log.w(TAG, "只有一个输入法")
             return null
         }
         
         // 在列表中找到当前输入法的位置
-        val currentIndex = imeList.indexOfFirst { it.id == currentId }
+        val currentIndex = imeIds.indexOf(currentId)
         
         if (currentIndex == -1) {
             // 当前输入法不在列表中，返回第一个
             Log.w(TAG, "当前输入法不在列表中，返回第一个")
-            return imeList[0].id
+            return imeIds[0]
         }
         
         // 计算下一个位置（循环）
-        val nextIndex = (currentIndex + 1) % imeList.size
-        val nextImeId = imeList[nextIndex].id
+        val nextIndex = (currentIndex + 1) % imeIds.size
+        val nextImeId = imeIds[nextIndex]
         
         Log.d(TAG, "当前位置: $currentIndex, 下一个位置: $nextIndex")
         return nextImeId

@@ -5,6 +5,9 @@
     <!-- 声明WRITE_SECURE_SETTINGS权限（需要通过ADB授予） -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
+    
+    <!-- 通知权限（Android 13+需要） -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"

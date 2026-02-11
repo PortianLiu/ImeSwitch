@@ -19,90 +19,30 @@ import lpt.imeswitch.utils.PermissionChecker
 /**
  * 主界面Activity
  * 
- * 提供用户引导和权限检测功能，支持零UI快速切换模式
+ * 提供用户引导和权限授予功能
  */
 class MainActivity : AppCompatActivity() {
     
     companion object {
         private const val TAG = "MainActivity"
-        private const val PREF_NAME = "ime_switch_prefs"
-        private const val KEY_FIRST_LAUNCH = "first_launch"
     }
     
     private lateinit var binding: ActivityMainBinding
     private lateinit var imeManager: ImeManager
-    private lateinit var prefs: SharedPreferences
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // 启用edge-to-edge显示
+        window.decorView.systemUiVisibility = 
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or 
+            View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        
         // 初始化
         imeManager = ImeManager(this)
-        prefs = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         
-        // 检查权限并决定行为模式
-        checkPermissionAndDecideMode()
-    }
-    
-    /**
-     * 检查权限并决定行为模式
-     * 
-     * 如果权限已授予且非首次启动，执行快速切换模式
-     * 否则显示引导界面
-     */
-    private fun checkPermissionAndDecideMode() {
-        val hasPermission = PermissionChecker.hasWriteSecureSettingsPermission(this)
-        val isFirstLaunch = prefs.getBoolean(KEY_FIRST_LAUNCH, true)
-        
-        if (hasPermission && !isFirstLaunch) {
-            // 快速切换模式
-            Log.d(TAG, "进入快速切换模式")
-            executeQuickSwitchMode()
-        } else {
-            // 引导模式
-            Log.d(TAG, "进入引导模式")
-            showGuideMode()
-        }
-    }
-    
-    /**
-     * 执行快速切换模式
-     * 
-     * 直接执行输入法切换并关闭Activity
-     */
-    private fun executeQuickSwitchMode() {
-        // 检查输入法数量
-        val imeList = imeManager.getEnabledInputMethods()
-        if (imeList.size < 2) {
-            Toast.makeText(
-                this,
-                getString(R.string.insufficient_imes),
-                Toast.LENGTH_SHORT
-            ).show()
-            finish()
-            return
-        }
-        
-        // 执行切换
-        val success = imeManager.switchToNextInputMethod()
-        
-        if (success) {
-            val currentImeName = imeManager.getCurrentInputMethodName()
-            Toast.makeText(
-                this,
-                getString(R.string.switched_to, currentImeName),
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            Toast.makeText(
-                this,
-                getString(R.string.switch_failed),
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-        
-        // 立即关闭Activity
-        finish()
+        // 显示引导界面
+        showGuideMode()
     }
     
     /**
@@ -131,7 +71,8 @@ class MainActivity : AppCompatActivity() {
                         // Root授权Tab
                         binding.adbTabContent.visibility = View.GONE
                         binding.rootTabContent.visibility = View.VISIBLE
-                        checkRootStatus()
+                        // 显示Root授权说明，不自动检测
+                        binding.rootStatusText.text = "如果您的设备已获取Root权限，可以点击下方按钮一键授权"
                     }
                 }
             }
@@ -147,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         
         // Root授权按钮
         binding.grantViaRootButton.setOnClickListener {
+            // 直接尝试Root授权，不需要先检测
             grantViaRoot()
         }
         
@@ -155,29 +97,8 @@ class MainActivity : AppCompatActivity() {
             refreshPermissionStatus()
         }
         
-        // 完成按钮
-        binding.completeButton.setOnClickListener {
-            // 标记非首次启动
-            prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
-            Toast.makeText(this, "设置已保存", Toast.LENGTH_SHORT).show()
-            finish()
-        }
-        
         // 初始化权限状态显示
         refreshPermissionStatus()
-    }
-    
-    /**
-     * 检查Root状态
-     */
-    private fun checkRootStatus() {
-        val hasRoot = PermissionChecker.checkRootAccess()
-        binding.rootStatusText.text = if (hasRoot) {
-            getString(R.string.root_available)
-        } else {
-            getString(R.string.root_not_available)
-        }
-        binding.grantViaRootButton.isEnabled = hasRoot
     }
     
     /**
@@ -200,7 +121,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, getString(R.string.root_grant_success), Toast.LENGTH_SHORT).show()
             refreshPermissionStatus()
         } else {
-            Toast.makeText(this, getString(R.string.root_grant_failed), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "授权失败，请确保设备已获取Root权限", Toast.LENGTH_LONG).show()
         }
     }
     

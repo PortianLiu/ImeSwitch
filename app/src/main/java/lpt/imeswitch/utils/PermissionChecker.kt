@@ -16,8 +16,7 @@ object PermissionChecker {
     /**
      * 检查是否具有WRITE_SECURE_SETTINGS权限
      * 
-     * 通过尝试读取系统安全设置来验证权限。
-     * 如果能够成功读取，说明具有该权限。
+     * 通过尝试写入一个测试值来验证权限。
      * 
      * @param context 应用上下文
      * @return true表示有权限，false表示无权限
@@ -29,8 +28,15 @@ object PermissionChecker {
                 context.contentResolver,
                 Settings.Secure.DEFAULT_INPUT_METHOD
             )
-            // 如果能读取到值（即使为null），说明有权限
-            Log.d(TAG, "权限检查成功，当前输入法: $currentIme")
+            
+            // 尝试写入相同的值（不改变任何设置）
+            Settings.Secure.putString(
+                context.contentResolver,
+                Settings.Secure.DEFAULT_INPUT_METHOD,
+                currentIme
+            )
+            
+            Log.d(TAG, "权限检查成功，具有WRITE_SECURE_SETTINGS权限")
             true
         } catch (e: SecurityException) {
             // 捕获安全异常，说明没有权限
