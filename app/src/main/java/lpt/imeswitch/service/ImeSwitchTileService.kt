@@ -104,6 +104,9 @@ class ImeSwitchTileService : TileService() {
             // 显示切换成功的通知
             val currentImeName = imeManager.getCurrentInputMethodName()
             showNotification("已切换到: $currentImeName")
+            
+            // 同时临时更新快捷开关标签显示切换结果
+            showSwitchResult(currentImeName)
         } else {
             Log.e(TAG, "输入法切换失败")
         }
@@ -113,20 +116,40 @@ class ImeSwitchTileService : TileService() {
     }
     
     /**
+     * 在快捷开关上临时显示切换结果
+     */
+    private fun showSwitchResult(imeName: String) {
+        val tile = qsTile ?: return
+        
+        // 临时显示切换结果
+        tile.label = "→ $imeName"
+        tile.updateTile()
+        
+        // 1.5秒后恢复正常显示
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            updateTileState()
+        }, 1500)
+    }
+    
+    /**
      * 创建通知渠道（Android 8.0+需要）
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "输入法切换通知"
             val descriptionText = "显示输入法切换结果"
-            val importance = NotificationManager.IMPORTANCE_LOW
+            val importance = NotificationManager.IMPORTANCE_DEFAULT // 改为DEFAULT重要性
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
                 setShowBadge(false)
+                enableVibration(false) // 禁用振动
+                setSound(null, null) // 禁用声音
             }
             
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
+            
+            Log.d(TAG, "通知渠道已创建")
         }
     }
     
@@ -134,17 +157,25 @@ class ImeSwitchTileService : TileService() {
      * 显示通知
      */
     private fun showNotification(message: String) {
-        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_menu_preferences)
-            .setContentTitle("输入法切换")
-            .setContentText(message)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setAutoCancel(true)
-            .setTimeoutAfter(2000) // 2秒后自动消失
-            .build()
-        
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        try {
+            Log.d(TAG, "准备显示通知: $message")
+            
+            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+                .setSmallIcon(android.R.drawable.ic_menu_preferences)
+                .setContentTitle("输入法切换")
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT) // 改为DEFAULT优先级
+                .setAutoCancel(true)
+                .setTimeoutAfter(3000) // 3秒后自动消失
+                .build()
+            
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.notify(NOTIFICATION_ID, notification)
+            
+            Log.d(TAG, "通知已发送")
+        } catch (e: Exception) {
+            Log.e(TAG, "显示通知失败", e)
+        }
     }
     
     /**
