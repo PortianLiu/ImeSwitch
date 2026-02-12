@@ -158,30 +158,48 @@ class ImeManager(private val context: Context) {
     /**
      * 根据输入法ID获取输入法的显示名称
      * 
-     * @param imeId 输入法的唯一标识符
-     * @return 输入法的显示名称，如果找不到则返回默认文本
+     * 通过InputMethodManager获取输入法信息。
+     * 由于在Manifest中声明了查询输入法服务的intent，
+     * InputMethodManager.inputMethodList能够返回所有已启用的输入法信息。
+     * 
+     * @param imeId 输入法的唯一标识符，格式: "包名/服务类名"
+     * @return 输入法的显示名称，如果找不到则返回从包名生成的友好名称
      */
     fun getInputMethodName(imeId: String): String {
         return try {
+            // 从InputMethodManager获取输入法信息
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-            if (imm == null) {
-                Log.e(TAG, "无法获取InputMethodManager服务")
-                return "未知输入法"
+            if (imm != null) {
+                val imeList = imm.inputMethodList
+                val targetIme = imeList.find { it.id == imeId }
+                
+                if (targetIme != null) {
+                    val name = targetIme.loadLabel(context.packageManager).toString()
+                    Log.d(TAG, "从InputMethodManager获取输入法[$imeId]的名称: $name")
+                    return name
+                }
             }
             
-            // 使用inputMethodList(所有已安装的输入法)而不是enabledInputMethodList
-            // 因为在MIUI上enabledInputMethodList只返回系统输入法和当前使用的第三方输入法
-            val imeList = imm.inputMethodList
-            val targetIme = imeList.find { it.id == imeId }
-            
-            if (targetIme != null) {
-                val name = targetIme.loadLabel(context.packageManager).toString()
-                Log.d(TAG, "输入法[$imeId]的名称: $name")
-                name
-            } else {
-                Log.w(TAG, "未找到输入法[$imeId]")
-                "未知输入法"
+            // Fallback: 从包名生成友好名称
+            // 例如 com.baidu.input -> Baidu Input
+            val packageName = imeId.split("/").firstOrNull()
+            if (packageName != null && packageName.isNotEmpty()) {
+                val parts = packageName.split(".")
+                val meaningfulParts = parts.filter { 
+                    it !in listOf("com", "cn", "org", "android", "google")
+                }
+                
+                if (meaningfulParts.isNotEmpty()) {
+                    val friendlyName = meaningfulParts.joinToString(" ") { part ->
+                        part.replaceFirstChar { it.uppercase() }
+                    }
+                    Log.d(TAG, "为输入法[$imeId]生成友好名称: $friendlyName")
+                    return friendlyName
+                }
             }
+            
+            Log.w(TAG, "未找到输入法[$imeId]")
+            "未知输入法"
         } catch (e: Exception) {
             Log.e(TAG, "获取输入法名称失败", e)
             "未知输入法"

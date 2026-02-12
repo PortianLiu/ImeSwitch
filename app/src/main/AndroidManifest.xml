@@ -8,6 +8,13 @@
     
     <!-- 通知权限（Android 13+需要） -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- 声明需要查询输入法服务（Android 11+包可见性要求） -->
+    <queries>
+        <intent>
+            <action android:name="android.view.InputMethod" />
+        </intent>
+    </queries>
 
     <application
         android:allowBackup="true"
