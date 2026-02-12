@@ -49,21 +49,6 @@ jobs:
           prerelease: false
           files: |
             app/build/outputs/apk/release/ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
-          body: |
-            ## ImeSwitch ${{ steps.get_tag.outputs.TAG_NAME }}
-            
-            ### 功能特性
-            - 短按快捷开关：轮切输入法
-            - 长按快捷开关：选择输入法
-            
-            ### 安装说明
-            1. 下载APK文件并安装
-            2. 通过ADB或Root授予WRITE_SECURE_SETTINGS权限
-            3. 在快速设置面板中添加"输入法切换"快捷开关
-            
-            ### 权限授予命令
-            ```bash
-            adb shell pm grant lpt.imeswitch android.permission.WRITE_SECURE_SETTINGS
-            ```
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
