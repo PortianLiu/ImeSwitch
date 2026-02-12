@@ -46,9 +46,9 @@ class ImeSelectionActivity : AppCompatActivity() {
             return
         }
         
-        // 获取已启用的输入法列表
-        val imeList = imeManager.getEnabledInputMethods()
-        if (imeList.isEmpty()) {
+        // 获取已启用的输入法ID列表
+        val imeIds = imeManager.getEnabledInputMethodIds()
+        if (imeIds.isEmpty()) {
             Log.w(TAG, "没有已启用的输入法")
             showErrorDialog("没有可用的输入法")
             return
@@ -57,22 +57,24 @@ class ImeSelectionActivity : AppCompatActivity() {
         // 获取当前输入法ID
         val currentImeId = imeManager.getCurrentInputMethodId()
         
-        // 准备对话框数据
-        val imeNames = imeList.map { it.loadLabel(packageManager).toString() }.toTypedArray()
-        val currentIndex = imeList.indexOfFirst { it.id == currentImeId }
+        // 准备对话框数据 - 使用ID列表获取名称
+        val imeNames = imeIds.map { imeId ->
+            imeManager.getInputMethodName(imeId)
+        }.toTypedArray()
+        val currentIndex = imeIds.indexOf(currentImeId)
         
         // 创建并显示对话框
         AlertDialog.Builder(this)
             .setTitle("选择输入法")
             .setSingleChoiceItems(imeNames, currentIndex) { dialog, which ->
                 // 用户选择了某个输入法
-                val selectedIme = imeList[which]
-                Log.d(TAG, "用户选择: ${selectedIme.id}")
+                val selectedImeId = imeIds[which]
+                Log.d(TAG, "用户选择: $selectedImeId")
                 
                 // 切换到选中的输入法
-                val success = imeManager.switchToInputMethod(selectedIme.id)
+                val success = imeManager.switchToInputMethod(selectedImeId)
                 if (success) {
-                    val imeName = selectedIme.loadLabel(packageManager).toString()
+                    val imeName = imeManager.getInputMethodName(selectedImeId)
                     Toast.makeText(this, "已切换到: $imeName", Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(this, "切换失败", Toast.LENGTH_SHORT).show()
