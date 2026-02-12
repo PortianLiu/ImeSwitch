@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # 匹配所有以v开头的tag，如v1.0、v1.1.0等
 
+permissions:
+  contents: write  # 允许创建Release和上传文件
+
 jobs:
   build:
     runs-on: ubuntu-latest
