@@ -169,7 +169,9 @@ class ImeManager(private val context: Context) {
                 return "未知输入法"
             }
             
-            val imeList = imm.enabledInputMethodList
+            // 使用inputMethodList(所有已安装的输入法)而不是enabledInputMethodList
+            // 因为在MIUI上enabledInputMethodList只返回系统输入法和当前使用的第三方输入法
+            val imeList = imm.inputMethodList
             val targetIme = imeList.find { it.id == imeId }
             
             if (targetIme != null) {
