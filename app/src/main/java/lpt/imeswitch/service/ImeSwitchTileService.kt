@@ -1,11 +1,8 @@
 package lpt.imeswitch.service
 
-import android.app.AlertDialog
-import android.content.Intent
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
-import lpt.imeswitch.ui.ImeSelectionActivity
 import lpt.imeswitch.utils.ImeManager
 import lpt.imeswitch.utils.PermissionChecker
 
@@ -14,7 +11,7 @@ import lpt.imeswitch.utils.PermissionChecker
  * 
  * 提供快速设置面板中的输入法切换快捷开关功能
  * - 短按: 轮切到下一个输入法
- * - 长按: 打开输入法选择Activity
+ * - 长按: 打开ImeSelectionActivity显示输入法选择对话框
  */
 class ImeSwitchTileService : TileService() {
     
@@ -72,6 +69,7 @@ class ImeSwitchTileService : TileService() {
      * 用户点击快捷开关时调用
      * 
      * 短按: 执行输入法轮切
+     * 长按: 系统会自动打开ImeSelectionActivity(通过AndroidManifest配置)
      */
     override fun onClick() {
         super.onClick()

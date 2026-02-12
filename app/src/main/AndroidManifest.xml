@@ -27,11 +27,6 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- 处理来自TileService的启动 -->
-            <intent-filter>
-                <action android:name="lpt.imeswitch.action.SELECT_IME" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
         
         <!-- 输入法选择Activity (透明,用于长按快捷开关) -->
@@ -42,9 +37,9 @@
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:launchMode="singleTask">
-            <!-- 处理来自TileService的启动 -->
+            <!-- 处理来自TileService的长按 -->
             <intent-filter>
-                <action android:name="lpt.imeswitch.action.SELECT_IME" />
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
