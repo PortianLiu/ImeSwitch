@@ -51,7 +51,7 @@
             </intent-filter>
         </activity>
         
-        <!-- 快速设置瓦片服务 -->
+        <!-- 快速设置快捷开关服务 -->
         <service
             android:name=".service.ImeSwitchTileService"
             android:icon="@android:drawable/ic_menu_preferences"
