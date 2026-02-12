@@ -18,13 +18,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       
-      - name: 授予Gradle执行权限
-        run: chmod +x gradlew
+      - name: 设置Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.14.3'
       
       - name: 构建Release APK
-        run: ./gradlew assembleRelease
+        run: gradle assembleRelease
       
       - name: 获取Tag名称
         id: get_tag
