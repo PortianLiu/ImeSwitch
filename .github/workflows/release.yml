@@ -43,6 +43,14 @@ jobs:
             mv app-release.apk ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
           fi
       
+      - name: 获取Tag注释消息
+        id: get_tag_message
+        run: |
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ steps.get_tag.outputs.TAG_NAME }})
+          echo "TAG_MESSAGE<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
       - name: 创建Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -51,8 +59,8 @@ jobs:
           name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
           draft: false
           prerelease: false
+          body: ${{ steps.get_tag_message.outputs.TAG_MESSAGE }}
           files: |
             app/build/outputs/apk/release/ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
