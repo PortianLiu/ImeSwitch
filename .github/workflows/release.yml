@@ -43,14 +43,63 @@ jobs:
             mv app-release.apk ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
           fi
       
-      - name: 创建Release
-        id: create_release
+      - name: 获取Tag注释消息
+        id: get_tag_message
+        run: |
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ steps.get_tag.outputs.TAG_NAME }})
+          if [ -z "$TAG_MESSAGE" ]; then
+            echo "HAS_MESSAGE=false" >> $GITHUB_OUTPUT
+          else
+            echo "HAS_MESSAGE=true" >> $GITHUB_OUTPUT
+            echo "TAG_MESSAGE<<EOF" >> $GITHUB_OUTPUT
+            echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: 生成Changelog
+        id: changelog
+        if: steps.get_tag_message.outputs.HAS_MESSAGE == 'false'
+        run: |
+          # 获取上一个tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ steps.get_tag.outputs.TAG_NAME }}^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            # 如果没有上一个tag，列出所有commit
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # 列出从上一个tag到当前tag的所有commit
+            CHANGELOG=$(git log ${PREV_TAG}..${{ steps.get_tag.outputs.TAG_NAME }} --pretty=format:"- %s (%h)" --no-merges)
+          fi
+          
+          echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+          echo "## 更新内容" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: 创建Release（使用tag消息）
+        if: steps.get_tag_message.outputs.HAS_MESSAGE == 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
           name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
           draft: false
           prerelease: false
+          body: ${{ steps.get_tag_message.outputs.TAG_MESSAGE }}
+          files: |
+            app/build/outputs/apk/release/ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 创建Release（使用自动生成的changelog）
+        if: steps.get_tag_message.outputs.HAS_MESSAGE == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+          name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+          draft: false
+          prerelease: false
+          body: ${{ steps.changelog.outputs.CHANGELOG }}
           files: |
             app/build/outputs/apk/release/ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
         env:
