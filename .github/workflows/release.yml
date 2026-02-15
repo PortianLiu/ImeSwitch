@@ -29,6 +29,17 @@ jobs:
         with:
           gradle-version: '8.14.3'
       
+      - name: 解码Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > $HOME/keystore.jks
+      
+      - name: 创建keystore.properties
+        run: |
+          echo "storeFile=$HOME/keystore.jks" > keystore.properties
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> keystore.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> keystore.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> keystore.properties
+      
       - name: 构建Release APK
         run: gradle assembleRelease
       
@@ -39,23 +50,42 @@ jobs:
       - name: 重命名APK文件
         run: |
           cd app/build/outputs/apk/release
-          if [ -f "app-release-unsigned.apk" ]; then
-            mv app-release-unsigned.apk ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
-          elif [ -f "app-release.apk" ]; then
-            mv app-release.apk ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
-          fi
+          mv app-release.apk ImeSwitch-${{ steps.get_tag.outputs.TAG_NAME }}.apk
       
       - name: 获取Tag注释消息
         id: get_tag_message
         run: |
-          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ steps.get_tag.outputs.TAG_NAME }})
-          if [ -z "$TAG_MESSAGE" ]; then
+          echo "正在获取tag: ${{ steps.get_tag.outputs.TAG_NAME }}"
+          
+          # 使用git show获取tag信息，然后提取注释部分
+          TAG_INFO=$(git show ${{ steps.get_tag.outputs.TAG_NAME }} --no-patch --format=%B 2>/dev/null || echo "")
+          
+          # 获取tag对象的完整信息
+          TAG_OBJECT=$(git cat-file -p ${{ steps.get_tag.outputs.TAG_NAME }} 2>/dev/null || echo "")
+          
+          # 如果是annotated tag，提取message部分（跳过tag元数据行）
+          if echo "$TAG_OBJECT" | grep -q "^object "; then
+            # 这是annotated tag，提取空行之后的内容作为message
+            TAG_MESSAGE=$(echo "$TAG_OBJECT" | sed -n '/^$/,$p' | tail -n +2)
+          else
+            # 这是lightweight tag，使用commit message
+            TAG_MESSAGE=""
+          fi
+          
+          echo "Tag消息内容:"
+          echo "$TAG_MESSAGE"
+          
+          if [ -z "$TAG_MESSAGE" ] || [ "$TAG_MESSAGE" = "" ]; then
             echo "HAS_MESSAGE=false" >> $GITHUB_OUTPUT
+            echo "Tag没有消息，将生成changelog"
           else
             echo "HAS_MESSAGE=true" >> $GITHUB_OUTPUT
-            echo "TAG_MESSAGE<<EOF" >> $GITHUB_OUTPUT
-            echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
+            echo "Tag有消息，将使用tag消息"
+            {
+              echo "TAG_MESSAGE<<EOF"
+              echo "$TAG_MESSAGE"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           fi
       
       - name: 生成Changelog
