@@ -23,6 +23,7 @@ local.properties
 # 签名文件
 *.jks
 *.keystore
+keystore.properties
 
 # 日志文件
 *.log

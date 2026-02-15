@@ -57,18 +57,15 @@ jobs:
         run: |
           echo "正在获取tag: ${{ steps.get_tag.outputs.TAG_NAME }}"
           
-          # 使用git show获取tag信息，然后提取注释部分
-          TAG_INFO=$(git show ${{ steps.get_tag.outputs.TAG_NAME }} --no-patch --format=%B 2>/dev/null || echo "")
+          # 使用git show获取tag的完整输出
+          TAG_SHOW_OUTPUT=$(git show ${{ steps.get_tag.outputs.TAG_NAME }} --no-patch 2>/dev/null || echo "")
           
-          # 获取tag对象的完整信息
-          TAG_OBJECT=$(git cat-file -p ${{ steps.get_tag.outputs.TAG_NAME }} 2>/dev/null || echo "")
-          
-          # 如果是annotated tag，提取message部分（跳过tag元数据行）
-          if echo "$TAG_OBJECT" | grep -q "^object "; then
-            # 这是annotated tag，提取空行之后的内容作为message
-            TAG_MESSAGE=$(echo "$TAG_OBJECT" | sed -n '/^$/,$p' | tail -n +2)
+          # 检查是否是annotated tag（输出中包含"tag "行）
+          if echo "$TAG_SHOW_OUTPUT" | grep -q "^tag "; then
+            # 这是annotated tag，提取tag消息（从空行后开始，到commit行之前）
+            TAG_MESSAGE=$(echo "$TAG_SHOW_OUTPUT" | sed -n '/^tag /,/^commit /p' | sed '1d;$d' | sed '/^$/d')
           else
-            # 这是lightweight tag，使用commit message
+            # 这是lightweight tag，没有tag消息
             TAG_MESSAGE=""
           fi
           
