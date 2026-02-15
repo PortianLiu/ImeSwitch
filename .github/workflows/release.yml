@@ -57,35 +57,15 @@ jobs:
       - name: 获取Tag注释消息
         id: get_tag_message
         run: |
-          TAG_NAME="${{ steps.get_tag.outputs.TAG_NAME }}"
-          echo "正在获取tag: $TAG_NAME"
-          
-          # 使用git show --format=%B -s 直接提取附注标签的纯消息（最可靠）
-          # %B 提取完整消息，-s 静默模式（只输出消息）
-          TAG_MESSAGE=$(git show "$TAG_NAME" --format=%B -s 2>/dev/null)
-          
-          # 清理首尾空白（保留中间的换行/格式）
-          TAG_MESSAGE=$(echo "$TAG_MESSAGE" | sed -e ':a' -e '/^\n*$/{$d;N;ba' -e '}' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-          
-          # 输出调试信息
-          echo "原始Tag消息:"
-          echo "---"
-          echo "$TAG_MESSAGE"
-          echo "---"
-          
-          # 判断是否为空
-          if [ -z "$TAG_MESSAGE" ] || [ "$TAG_MESSAGE" = "" ]; then
+          TAG_MESSAGE=$(git tag -l --format='%(contents)' ${{ steps.get_tag.outputs.TAG_NAME }})
+          if [ -z "$TAG_MESSAGE" ]; then
             echo "HAS_MESSAGE=false" >> $GITHUB_OUTPUT
             echo "Tag没有消息，将生成changelog"
           else
             echo "HAS_MESSAGE=true" >> $GITHUB_OUTPUT
-            # 用EOF保留换行格式
-            {
-              echo "TAG_MESSAGE<<EOF"
-              echo "$TAG_MESSAGE"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-            echo "Tag有消息，将使用tag消息"
+            echo "TAG_MESSAGE<<EOF" >> $GITHUB_OUTPUT
+            echo "$TAG_MESSAGE" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
           fi
       
       - name: 生成Changelog
